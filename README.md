@@ -34,15 +34,15 @@ docker compose build
 ### 3. Make the launcher executable
 
 ```bash
-chmod +x ~/claude-code-docker/claude.sh
+chmod +x ~/claude-code-docker/dcc
 ```
 
 ### 4. Add to PATH (optional but recommended)
 
-Symlink into `~/.local/bin/` so you can run `claude.sh` from anywhere:
+Symlink into `~/.local/bin/` so you can run `dcc` from anywhere:
 
 ```bash
-ln -s ~/claude-code-docker/claude.sh ~/.local/bin/claude.sh
+ln -s ~/claude-code-docker/dcc ~/.local/bin/dcc
 ```
 
 Make sure `~/.local/bin` is on your `PATH`.
@@ -61,10 +61,10 @@ If you've previously run Claude Code on your host, this file already exists.
 
 ```bash
 # Launch with the current directory as workspace
-claude.sh
+dcc
 
 # Launch with a specific project folder
-claude.sh /path/to/project
+dcc /path/to/project
 ```
 
 On first run, authenticate inside the container:
@@ -111,4 +111,4 @@ git pull
 docker compose build
 ```
 
-If you symlinked `claude.sh`, the updated script takes effect immediately after `git pull` — no re-linking needed.
+If you symlinked `dcc`, the updated script takes effect immediately after `git pull` — no re-linking needed.
