@@ -9,5 +9,6 @@ services:
       - ${WORKSPACE_DIR:-/tmp}:/workspace
       - ${HOME}/.claude:/home/ubuntu/.claude
       - ${HOME}/.claude.json:/home/ubuntu/.claude.json
+      - ${HOME}/.ssh:/home/ubuntu/.ssh:ro
     stdin_open: true
     tty: true
