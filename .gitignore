@@ -1,0 +1,11 @@
+# Claude Code local settings (personal, not part of the project)
+.claude/
+
+# Environment files
+.env
+.env.*
+
+# Editor artifacts
+*.swp
+*~
+.DS_Store

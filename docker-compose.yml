@@ -1,0 +1,13 @@
+services:
+  claude:
+    build: .
+    user: "${DOCKER_UID}:${DOCKER_GID}"
+    environment:
+      - HOME=/home/ubuntu
+    working_dir: /workspace
+    volumes:
+      - ${WORKSPACE_DIR:-/tmp}:/workspace
+      - ${HOME}/.claude:/home/ubuntu/.claude
+      - ${HOME}/.claude.json:/home/ubuntu/.claude.json
+    stdin_open: true
+    tty: true
