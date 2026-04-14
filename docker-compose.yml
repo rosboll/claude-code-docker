@@ -10,5 +10,6 @@ services:
       - ${HOME}/.claude:/home/ubuntu/.claude
       - ${HOME}/.claude.json:/home/ubuntu/.claude.json
       - ${HOME}/.ssh:/home/ubuntu/.ssh:ro
+      - /tmp/claude:/tmp/claude
     stdin_open: true
     tty: true

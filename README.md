@@ -47,7 +47,21 @@ ln -s ~/claude-code-docker/dcc ~/.local/bin/dcc
 
 Make sure `~/.local/bin` is on your `PATH`.
 
-### 5. Ensure `~/.claude.json` exists
+### 5. Create the `/tmp/claude` directory
+
+The container mounts `/tmp/claude` from your host for sharing Claude Code output (e.g. the `/copy` command writes responses here). Since `/tmp` is cleared on reboot, create it on login by adding this to your shell profile (e.g. `~/.bashrc` or `~/.profile`):
+
+```bash
+mkdir -p /tmp/claude
+```
+
+Or create it manually before each session:
+
+```bash
+mkdir -p /tmp/claude
+```
+
+### 6. Ensure `~/.claude.json` exists
 
 Docker requires the source of a file bind-mount to already exist as a file on the host. If it doesn't, Docker silently creates a directory there instead, which breaks things:
 
@@ -80,6 +94,7 @@ claude login
 - **The container is ephemeral** (`--rm` flag) — anything installed during a session is lost on exit. Add tools you want permanently to the `Dockerfile` and rebuild
 - **Rebuilding the image** does not affect your project files or Claude config — those are on mounted volumes, not in the image
 - **Claude project memory** is keyed to the path inside the container (`/workspace`), so all projects share the same memory namespace — generally harmless, but worth knowing
+- **`/tmp/claude` is ephemeral** — it lives in `/tmp` on the host and is cleared on reboot. The directory must exist before starting the container; add `mkdir -p /tmp/claude` to your shell profile so it is recreated automatically
 
 ## Troubleshooting
 
