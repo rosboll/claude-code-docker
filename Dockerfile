@@ -31,5 +31,11 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
 USER ubuntu
 RUN curl -fsSL https://claude.ai/install.sh | bash
 ENV PATH="/home/ubuntu/.local/bin:${PATH}"
+USER root
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 WORKDIR /workspace
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["bash"]

@@ -1,9 +1,10 @@
 services:
   claude:
     build: .
-    user: "${DOCKER_UID}:${DOCKER_GID}"
     environment:
       - HOME=/home/ubuntu
+      - DOCKER_UID=${DOCKER_UID}
+      - DOCKER_GID=${DOCKER_GID}
     working_dir: /workspace
     volumes:
       - ${WORKSPACE_DIR:-/tmp}:/workspace
