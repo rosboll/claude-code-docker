@@ -1,16 +1,70 @@
+x-agent: &agent
+  build:
+    context: .
+  # Both services share one image, so `docker compose build` builds it once.
+  image: claude-code-docker:latest
+  environment:
+    - HOME=/home/ubuntu
+    - DOCKER_UID=${DOCKER_UID}
+    - DOCKER_GID=${DOCKER_GID}
+  working_dir: /workspace
+  stdin_open: true
+  tty: true
+  # Lets the container reach a service listening on the Docker host itself
+  # (an SSH port-forward, a local inference server). Inert if unused.
+  # The magic value host-gateway always resolves to the *default* docker0
+  # bridge address, which is dead when nothing uses the default network. If so,
+  # set HOST_GATEWAY in .env to this project's own gateway, from:
+  #   docker network inspect dco_default -f '{{(index .IPAM.Config 0).Gateway}}'
+  extra_hosts:
+    - "host.docker.internal:${HOST_GATEWAY:-host-gateway}"
+
 services:
+  # Claude Code against Anthropic, using your Claude account.
   claude:
-    build: .
-    environment:
-      - HOME=/home/ubuntu
-      - DOCKER_UID=${DOCKER_UID}
-      - DOCKER_GID=${DOCKER_GID}
-    working_dir: /workspace
+    <<: *agent
     volumes:
       - ${WORKSPACE_DIR:-/tmp}:/workspace
       - ${HOME}/.claude:/home/ubuntu/.claude
       - ${HOME}/.claude.json:/home/ubuntu/.claude.json
       - ${HOME}/.ssh/claude:/home/ubuntu/.ssh:ro
       - /tmp/claude:/tmp/claude
-    stdin_open: true
-    tty: true
+
+  # The same Claude Code binary, pointed at a local Anthropic-compatible
+  # endpoint. The container paths below are identical to the `claude` service's
+  # — only the host side differs — so Claude Code needs no relocation variable
+  # (no CLAUDE_CONFIG_DIR) and the two agents cannot clobber each other's auth,
+  # onboarding state, or session history.
+  claude-local:
+    <<: *agent
+    # Endpoint + model aliases for the local LLM.
+    # Created from .env.example by the launcher on first run.
+    env_file:
+      - .env
+    # If the endpoint's hostname is served by a DNS resolver that only exists
+    # behind the WireGuard tunnel, uncomment and point at it. Docker discards
+    # the host's resolv.conf when it holds a loopback stub (systemd-resolved's
+    # 127.0.0.53) and substitutes public resolvers, which cannot see internal
+    # names. Reaching the model through an SSH forward on the Docker host
+    # (host.docker.internal) sidesteps this entirely.
+    #dns:
+    #  - 10.0.0.1
+    #dns_search:
+    #  - internal.example
+    volumes:
+      - ${WORKSPACE_DIR:-/tmp}:/workspace
+      - ${HOME}/.claude-local:/home/ubuntu/.claude
+      - ${HOME}/.claude-local.json:/home/ubuntu/.claude.json
+      - ${HOME}/.ssh/claude:/home/ubuntu/.ssh:ro
+      - /tmp/claude-local:/tmp/claude
+
+# Overriding the implicit `default` network applies to both services without
+# touching either service definition.
+networks:
+  default:
+    driver: bridge
+    driver_opts:
+      # Must be <= the MTU of the egress interface. A WireGuard tunnel is
+      # typically 1420; leaving this at 1500 makes large requests stall while
+      # small ones succeed. Check yours with: ip link show wg0
+      com.docker.network.driver.mtu: ${DOCKER_MTU:-1500}

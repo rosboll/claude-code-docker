@@ -1,0 +1,5 @@
+#!/bin/bash
+# Claude Code against your local model, in a container.
+# Usage: dco [workspace-dir] [command...]
+set -euo pipefail
+exec "$(dirname "$(readlink -f "$0")")/_run.sh" claude-local "$@"

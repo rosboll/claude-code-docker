@@ -1,11 +1,4 @@
 #!/bin/bash
+# Claude Code in a container. Usage: dcc [workspace-dir] [command...]
 set -euo pipefail
-SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
-export DOCKER_UID=$(id -u)
-export DOCKER_GID=$(id -g)
-export WORKSPACE_DIR="${1:-$(pwd)}"
-
-mkdir -p /tmp/claude
-touch "${HOME}/.claude.json"
-
-docker compose -f "${SCRIPT_DIR}/docker-compose.yml" run --rm claude
+exec "$(dirname "$(readlink -f "$0")")/_run.sh" claude "$@"
