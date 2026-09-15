@@ -131,7 +131,8 @@ All are commented in `.env.example`:
 | `CLAUDE_CODE_SUBAGENT_MODEL` | Model for subagents, if you want a cheaper one than the main model |
 | `ANTHROPIC_CUSTOM_MODEL_OPTION` | Adds a literal model ID to the `/model` picker |
 | `ANTHROPIC_CUSTOM_HEADERS` | Extra headers, `Name: Value`, newline-separated |
-| `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` | Suppresses telemetry, error reporting and the auto-updater, so the only egress is to your endpoint |
+| `DISABLE_TELEMETRY` / `DISABLE_ERROR_REPORTING` | Turn off reporting while leaving the auto-updater working (set by default) |
+| `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` | Bigger hammer: limits egress to your endpoint, but **also suppresses the update check**, pinning Claude Code to the image version |
 | `ENABLE_TOOL_SEARCH` | Claude Code disables MCP tool search on a non-first-party base URL; re-enable only if your proxy forwards `tool_reference` blocks |
 
 Two behaviours change automatically when `ANTHROPIC_BASE_URL` points somewhere other than `api.anthropic.com`: MCP tool search is off by default (above), and Remote Control is disabled. Both are expected, not misconfiguration.
@@ -325,9 +326,15 @@ To force a refresh, bust the cache:
 docker compose build --no-cache          # rebuilds everything, a few minutes
 ```
 
-For `dcc` this matters less than it looks: Claude Code's own auto-updater runs
-inside the session. But the container is `--rm` and `~/.local` isn't mounted, so
-an in-session update is discarded on exit and re-downloaded next time — the image
-is what determines your starting version. For `dco` the updater is suppressed by
-`CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`, so the image version is the *only*
-version, which is usually what you want for a self-contained local-model setup.
+In practice Claude Code's own auto-updater covers for this. It runs at session
+start and installs a newer build into `~/.local/share/claude/versions/`, so both
+launchers end up current regardless of how stale the image is. Because `~/.local`
+isn't mounted and the container is `--rm`, that update is discarded on exit and
+re-fetched next time — a few hundred MB per container, and the reason to rebuild
+occasionally even though nothing breaks if you don't.
+
+This only works while Claude Code is allowed to make that check. Setting
+`CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` puts it in "essential-traffic" mode,
+which suppresses the update lookup and makes the image version the only version
+you will ever run. `DISABLE_TELEMETRY` and `DISABLE_ERROR_REPORTING` do *not*
+have that effect, which is why `.env.example` uses those two instead.
