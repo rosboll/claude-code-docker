@@ -1,9 +1,10 @@
 # Claude Code local settings (personal, not part of the project)
 .claude/
 
-# Environment files
+# Environment files — .env holds real provider credentials, the template does not
 .env
 .env.*
+!.env.example
 
 # Editor artifacts
 *.swp
